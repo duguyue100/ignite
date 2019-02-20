@@ -45,6 +45,11 @@ def create_supervised_trainer(model, optimizer, loss_fn,
         y_pred = model(x)
         loss = loss_fn(y_pred, y)
         loss.backward()
+
+        # TODO: a better way to write custom trainer
+        # possible gradient clip norm
+        #  torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=100)
+
         optimizer.step()
         return loss.item()
 
