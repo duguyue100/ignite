@@ -14,7 +14,11 @@ class _BaseClassification(Metric):
         super(_BaseClassification, self).__init__(output_transform=output_transform)
 
     def _check_shape(self, output):
-        y_pred, y = output
+        if len(output) == 2:
+            y_pred, y = output
+        else:
+            y_pred, y, kwargs = output
+        #  y_pred, y = output
 
         if y.ndimension() > 1 and y.shape[1] == 1:
             # (N, 1, ...) -> (N, ...)
@@ -41,7 +45,10 @@ class _BaseClassification(Metric):
         if self._is_multilabel and not (y.shape == y_pred.shape and y.ndimension() > 1 and y.shape[1] != 1):
             raise ValueError("y and y_pred must have same shape of (batch_size, num_categories, ...).")
 
-        return y_pred, y
+        if len(output) == 2:
+            return y_pred, y
+        else:
+            return y_pred, y, kwargs
 
     def _check_type(self, output):
         y_pred, y = output
@@ -108,7 +115,10 @@ class Accuracy(_BaseClassification):
 
     def update(self, output):
 
-        y_pred, y = self._check_shape(output)
+        if len(output) == 2:
+            y_pred, y = self._check_shape(output)
+        else:
+            y_pred, y, kwargs = self._check_shape(output)
         self._check_type((y_pred, y))
 
         if self._type == "binary":
