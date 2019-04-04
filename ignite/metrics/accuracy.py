@@ -106,8 +106,10 @@ class Accuracy(_BaseClassification):
         is_multilabel (bool, optional): flag to use in multilabel case. By default, False.
     """
 
-    def __init__(self, output_transform=lambda x: x, is_multilabel=False):
+    def __init__(self, class_type=None, output_transform=lambda x: x, is_multilabel=False):
         super(Accuracy, self).__init__(output_transform=output_transform, is_multilabel=is_multilabel)
+
+        self._type = class_type
 
     def reset(self):
         self._num_correct = 0
@@ -119,10 +121,14 @@ class Accuracy(_BaseClassification):
             y_pred, y = self._check_shape(output)
         else:
             y_pred, y, kwargs = self._check_shape(output)
-        self._check_type((y_pred, y))
 
         if self._type == "binary":
-            correct = torch.eq(y_pred.type(y.type()), y).view(-1)
+            self._check_type(((y_pred > 0.5).type(y.type()), y))
+        else:
+            self._check_type((y_pred, y))
+
+        if self._type == "binary":
+            correct = torch.eq((y_pred > 0.5).type(y.type()), y).view(-1)
         elif self._type == "multiclass":
             indices = torch.max(y_pred, dim=1)[1]
             correct = torch.eq(indices, y).view(-1)
