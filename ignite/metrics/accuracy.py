@@ -65,7 +65,6 @@ class _BaseClassification(Metric):
             if not torch.equal(y, y ** 2):
                 raise ValueError("For binary cases, y must be comprised of 0's and 1's.")
 
-            print(y_pred)
             if not torch.equal(y_pred, y_pred ** 2):
                 raise ValueError("For binary cases, y_pred must be comprised of 0's and 1's.")
 
@@ -138,7 +137,6 @@ class Accuracy(_BaseClassification):
         else:
             y_pred, y, kwargs = self._check_shape(output)
 
-        print(self._type)
         if self._type == "binary":
             self._check_type(((y_pred > 0.5).type(y.type()), y))
         else:
