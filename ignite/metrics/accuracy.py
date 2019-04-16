@@ -123,6 +123,8 @@ class Accuracy(_BaseClassification):
         self._num_examples = None
         super(Accuracy, self).__init__(output_transform=output_transform, is_multilabel=is_multilabel)
 
+        self.class_type = class_type
+
     def reset(self):
         self._num_correct = 0
         self._num_examples = 0
