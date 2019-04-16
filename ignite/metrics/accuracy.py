@@ -140,7 +140,8 @@ class Accuracy(_BaseClassification):
             y_pred, y, kwargs = self._check_shape(output)
 
         if self._type == "binary":
-            self._check_type(((y_pred > 0.5).type(y.type()), y))
+            self._num_classes = 1
+            #  self._check_type(((y_pred > 0.5).type(y.type()), y))
         else:
             self._check_type((y_pred, y))
 
