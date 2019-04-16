@@ -11,7 +11,12 @@ class _BaseClassification(Metric):
     def __init__(self, output_transform=lambda x: x, is_multilabel=False):
         self._is_multilabel = is_multilabel
         self._type = None
+        self._num_classes = None
         super(_BaseClassification, self).__init__(output_transform=output_transform)
+
+    def reset(self):
+        self._type = None
+        self._num_classes = None
 
     def _check_shape(self, output):
         if len(output) == 2:
@@ -55,6 +60,7 @@ class _BaseClassification(Metric):
 
         if y.ndimension() + 1 == y_pred.ndimension():
             update_type = "multiclass"
+            num_classes = y_pred.shape[1]
         elif y.ndimension() == y_pred.ndimension():
             if not torch.equal(y, y ** 2):
                 raise ValueError("For binary cases, y must be comprised of 0's and 1's.")
@@ -64,16 +70,22 @@ class _BaseClassification(Metric):
 
             if self._is_multilabel:
                 update_type = "multilabel"
+                num_classes = y_pred.shape[1]
             else:
                 update_type = "binary"
+                num_classes = 1
         else:
             raise RuntimeError("Invalid shapes of y (shape={}) and y_pred (shape={}), check documentation."
                                " for expected shapes of y and y_pred.".format(y.shape, y_pred.shape))
         if self._type is None:
             self._type = update_type
+            self._num_classes = num_classes
         else:
             if self._type != update_type:
                 raise RuntimeError("Input data type has changed from {} to {}.".format(self._type, update_type))
+            if self._num_classes != num_classes:
+                raise ValueError("Input data number of classes has changed from {} to {}"
+                                 .format(self._num_classes, num_classes))
 
 
 class Accuracy(_BaseClassification):
@@ -106,14 +118,17 @@ class Accuracy(_BaseClassification):
         is_multilabel (bool, optional): flag to use in multilabel case. By default, False.
     """
 
-    def __init__(self, class_type=None, output_transform=lambda x: x, is_multilabel=False):
+    def __init__(self, output_transform=lambda x: x, is_multilabel=False):
+        self._num_correct = None
+        self._num_examples = None
         super(Accuracy, self).__init__(output_transform=output_transform, is_multilabel=is_multilabel)
 
-        self._type = class_type
+        #  self._type = class_type
 
     def reset(self):
         self._num_correct = 0
         self._num_examples = 0
+        super(Accuracy, self).reset()
 
     def update(self, output):
 
@@ -130,7 +145,7 @@ class Accuracy(_BaseClassification):
         if self._type == "binary":
             correct = torch.eq((y_pred > 0.5).type(y.type()), y).view(-1)
         elif self._type == "multiclass":
-            indices = torch.max(y_pred, dim=1)[1]
+            indices = torch.argmax(y_pred, dim=1)
             correct = torch.eq(indices, y).view(-1)
         elif self._type == "multilabel":
             # if y, y_pred shape is (N, C, ...) -> (N x ..., C)
