@@ -118,12 +118,12 @@ class Accuracy(_BaseClassification):
         is_multilabel (bool, optional): flag to use in multilabel case. By default, False.
     """
 
-    def __init__(self, output_transform=lambda x: x, is_multilabel=False):
+    def __init__(self, class_type=None, output_transform=lambda x: x, is_multilabel=False):
         self._num_correct = None
         self._num_examples = None
         super(Accuracy, self).__init__(output_transform=output_transform, is_multilabel=is_multilabel)
 
-        #  self._type = class_type
+        self._type = class_type
 
     def reset(self):
         self._num_correct = 0
